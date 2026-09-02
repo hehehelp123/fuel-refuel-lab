@@ -1,5 +1,12 @@
 # Лабораторная: детекция заправок по датчику уровня топлива
 
+[![Открыть в Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/hehehelp123/fuel-refuel-lab/blob/main/Fuel_Refuel_Detection_Lab.ipynb)
+
+**Ноутбук в Colab:** https://colab.research.google.com/github/hehehelp123/fuel-refuel-lab/blob/main/Fuel_Refuel_Detection_Lab.ipynb
+
+**Датасет напрямую:** https://raw.githubusercontent.com/hehehelp123/fuel-refuel-lab/main/data/fuel_5min.csv
+**Сырые сообщения:** https://raw.githubusercontent.com/hehehelp123/fuel-refuel-lab/main/data/fuel_raw.csv.gz
+
 Материалы лабы на основе проекта FuelRemove. Данные реальные: 50 машин, полгода
 работы, 6.1 млн сообщений телематики.
 
