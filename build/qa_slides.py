@@ -29,7 +29,7 @@ for i, slide in enumerate(prs.slides, 1):
         w = (sh.width or 0) / 914400
         h = (sh.height or 0) / 914400
 
-        if x < 0.4 or y < 0.3 or x + w > SW - 0.4 + 1e-6 or y + h > SH - 0.3 + 1e-6:
+        if x < 0.25 or y < 0.2 or x + w > SW - 0.25 + 1e-6 or y + h > SH - 0.2 + 1e-6:
             problems.append(f"слайд {i}: {sh.shape_type} выходит за поля "
                             f"({x:.2f},{y:.2f}) {w:.2f}x{h:.2f}")
 
@@ -59,7 +59,7 @@ for i, slide in enumerate(prs.slides, 1):
             if size:
                 break
         if not size:
-            continue
+            size = 16.0          # размер по умолчанию из макета шаблона
         char_w = size * 0.5 / 72                      # средняя ширина знака, дюймы
         per_line = max(1, int(w / char_w))
         need = sum(max(1, -(-len(ln) // per_line)) for ln in t.splitlines())
