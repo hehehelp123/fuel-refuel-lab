@@ -112,6 +112,27 @@ plt.tight_layout()
 fig.savefig(os.path.join(OUT, "s_event.png"))
 plt.close(fig)
 
+# --------------------------------------------------- 5. кривая обучения
+history = env.get("history") or []
+if history:
+    ep = [h[0] for h in history]
+    f1 = [h[2] for h in history]
+    fig, ax = plt.subplots(figsize=(5.4, 2.6))
+    ax.plot(ep, f1, lw=1.8, color=ACCENT)
+    best = max(range(len(f1)), key=lambda i: f1[i])
+    ax.plot(ep[best], f1[best], "o", ms=7, color=ACCENT)
+    ax.annotate(f"{f1[best]:.3f}", (ep[best], f1[best]),
+                textcoords="offset points", xytext=(8, 7), fontsize=12, color=ACCENT)
+    ax.set_xlabel("эпоха")
+    ax.set_ylabel("F1 целевого класса")
+    ax.set_ylim(0.5, 0.85)
+    plt.tight_layout()
+    fig.savefig(os.path.join(OUT, "s_training.png"))
+    plt.close(fig)
+    print(f"кривая обучения: {len(history)} эпох, лучший F1 {f1[best]:.3f}")
+else:
+    print("истории обучения нет — s_training.png не построен")
+
 print("картинки:", os.listdir(OUT))
 print(f"событийный F1: LSTM {lstm_f1:.3f}, порог {best_thr_f1:.3f}")
 print("confusion matrix:\n", cm)

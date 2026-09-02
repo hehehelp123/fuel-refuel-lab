@@ -65,6 +65,29 @@ for i, slide in enumerate(prs.slides, 1):
             problems.append(f'слайд {i}: возможное переполнение '
                             f'({needed:.2f}" против {h:.2f}") — «{t.splitlines()[0][:50]}»')
 
+    # наложение картинок на текстовые блоки
+    boxes = []
+    for sh in slide.shapes:
+        if sh.left is None:
+            continue
+        rect = (sh.left / 914400, sh.top / 914400,
+                (sh.left + (sh.width or 0)) / 914400,
+                (sh.top + (sh.height or 0)) / 914400)
+        kind = ("pic" if sh.shape_type == 13 else
+                ("txt" if sh.has_text_frame and sh.text_frame.text.strip() else None))
+        if kind:
+            boxes.append((kind, rect, sh))
+    for j, (k1, r1, sh1) in enumerate(boxes):
+        for k2, r2, sh2 in boxes[j + 1:]:
+            if {k1, k2} != {"pic", "txt"}:
+                continue
+            ox = min(r1[2], r2[2]) - max(r1[0], r2[0])
+            oy = min(r1[3], r2[3]) - max(r1[1], r2[1])
+            if ox > 0.05 and oy > 0.05:
+                txt = (sh1 if k1 == "txt" else sh2).text_frame.text.splitlines()[0][:40]
+                problems.append(f'слайд {i}: картинка перекрывает текст '
+                                f'({ox:.2f}x{oy:.2f}") — «{txt}»')
+
 print("\n=== замечания ===")
 if problems:
     for p in problems:

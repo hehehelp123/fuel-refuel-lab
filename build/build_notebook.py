@@ -318,6 +318,7 @@ def predict(loader):
 
 
 best_f1, best_state = -1.0, None
+history = []                       # (эпоха, loss, F1) — пригодится для графика
 t0 = time.time()
 
 for epoch in range(1, EPOCHS + 1):
@@ -334,6 +335,7 @@ for epoch in range(1, EPOCHS + 1):
     y_pred = predict(test_loader)
     f1_target = f1_score(y_test, y_pred, labels=[1], average="macro", zero_division=0)
     scheduler.step(f1_target)
+    history.append((epoch, total / len(train_loader), f1_target))
 
     if f1_target > best_f1:
         best_f1 = f1_target
