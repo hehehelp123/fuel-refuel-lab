@@ -14,7 +14,7 @@ CSV = "C:/Users/79101/Downloads/Лаба_заправки/data/fuel_5min.csv"
 OUT = "C:/Users/79101/Downloads/Лаба_заправки/slides_img"
 os.makedirs(OUT, exist_ok=True)
 
-ACCENT = "#EC0B43"   # фирменный красный ИТМО
+ACCENT = "#9307FE"   # фирменный фиолетовый ИТМО
 INK = "#1A1A1A"
 GREY = "#9A9A9A"
 

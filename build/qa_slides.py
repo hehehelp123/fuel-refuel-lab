@@ -48,25 +48,22 @@ for i, slide in enumerate(prs.slides, 1):
         first = t.splitlines()[0]
         print(f"  [{w:4.1f}x{h:4.1f}] {first[:78]}")
 
-    # грубая оценка переполнения: сколько строк влезет против того, сколько нужно
+    # оценка переполнения: высота считается по каждому абзацу со своим кеглем
     for t, w, h, sh in texts:
-        size = None
+        needed = 0.0
         for para in sh.text_frame.paragraphs:
-            for run in para.runs:
-                if run.font.size:
-                    size = run.font.size.pt
-                    break
-            if size:
-                break
-        if not size:
-            size = 16.0          # размер по умолчанию из макета шаблона
-        char_w = size * 0.5 / 72                      # средняя ширина знака, дюймы
-        per_line = max(1, int(w / char_w))
-        need = sum(max(1, -(-len(ln) // per_line)) for ln in t.splitlines())
-        fits = max(1, int(h / (size * 1.25 / 72)))
-        if need > fits:
-            problems.append(f"слайд {i}: возможное переполнение "
-                            f"({need} строк против {fits}) — «{t.splitlines()[0][:50]}»")
+            text = "".join(r.text for r in para.runs)
+            size = next((r.font.size.pt for r in para.runs if r.font.size), 16.0)
+            char_w = size * 0.5 / 72                  # средняя ширина знака, дюймы
+            per_line = max(1, int(w / char_w))
+            lines = sum(max(1, -(-len(ln) // per_line))
+                        for ln in (text or " ").split("\n"))
+            needed += lines * size * 1.25 / 72
+            if para.space_before:
+                needed += para.space_before.pt / 72
+        if needed > h * 1.05:
+            problems.append(f'слайд {i}: возможное переполнение '
+                            f'({needed:.2f}" против {h:.2f}") — «{t.splitlines()[0][:50]}»')
 
 print("\n=== замечания ===")
 if problems:
