@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Публикует материалы лабы в GitHub и делает ноутбук самодостаточным для Colab.
 
-    python build/publish.py <owner>/<repo>
+    python build/publish.py <owner>/<repo> ["сообщение коммита"]
 
 Прописывает в ноутбук прямую ссылку на датасет, добавляет в README ссылку
 «Открыть в Colab», коммитит и пушит.
@@ -77,7 +77,8 @@ print("README обновлён")
 run("git", "add", "-A")
 status = run("git", "status", "--porcelain", check=False)
 if status.stdout.strip():
-    run("git", "commit", "-m", "Ссылки на датасет и Colab")
+    msg = sys.argv[2] if len(sys.argv) > 2 else "Обновление материалов лабораторной"
+    run("git", "commit", "-m", msg)
 else:
     print("нечего коммитить")
 
