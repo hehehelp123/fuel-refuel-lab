@@ -463,9 +463,11 @@ d1_center = X_test[:, CENTER, FEATURES.index("d1")]
 print(f"{'порог, л':>10} | {'precision':>9} | {'recall':>6} | {'F1':>5}")
 print("-" * 42)
 best_thr, best_thr_f1 = None, -1
+thr_results = []
 for thr in [1, 2, 3, 5, 8, 12, 20]:
     pred_thr = (d1_center > thr).astype("int64")
     m = event_metrics(y_test, pred_thr, meta_test, verbose=False)
+    thr_results.append((thr, m))
     print(f"{thr:>10} | {m['precision']:>9.3f} | {m['recall']:>6.3f} | {m['f1']:>5.3f}")
     if m["f1"] > best_thr_f1:
         best_thr_f1, best_thr = m["f1"], thr

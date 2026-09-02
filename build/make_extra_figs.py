@@ -165,6 +165,40 @@ def fig_event_metric():
     print("  s_event_metric.png")
 
 
+# ------------------------------------------- 4. схема утечки (вопрос со звёздочкой)
+def fig_leak():
+    fig, ax = plt.subplots(figsize=(5.4, 2.4))
+    ax.set_xlim(-0.6, 5.6)
+    ax.set_ylim(-1.5, 3.2)
+    ax.axis("off")
+    ax.grid(False)
+
+    xs = [0, 1, 2, 3, 4]
+    ys = [1.0, 1.0, 0.0, 2.4, 2.4]
+    ax.plot(xs, ys, marker="o", ms=9, lw=1.8, color=INK, zorder=3)
+
+    for x in (1, 2, 3):
+        ax.add_patch(Rectangle((x - 0.42, -0.35), 0.84, 3.1, facecolor=PURPLE,
+                               alpha=0.14, lw=0, zorder=1))
+    ax.text(2, 2.95, "метка ставится по этим трём точкам", ha="center",
+            fontsize=11, color=PURPLE)
+    ax.annotate("ноль", (2, 0), textcoords="offset points", xytext=(0, -22),
+                ha="center", fontsize=11)
+    nl = chr(10)
+    ax.annotate("уровень" + nl + "стабилен", (0.5, 1.0),
+                textcoords="offset points",
+                xytext=(0, -46), ha="center", fontsize=10, color="#666666")
+    ax.annotate("уровень" + nl + "выше", (3.5, 2.4),
+                textcoords="offset points",
+                xytext=(0, -46), ha="center", fontsize=10, color="#666666")
+    ax.text(2, -1.3, "ноль и разности уровня — это и есть признаки модели",
+            ha="center", fontsize=11, color=INK)
+    fig.savefig(os.path.join(OUT, "s_leak.png"))
+    plt.close(fig)
+    print("  s_leak.png")
+
+
+fig_leak()
 fig_window()
 fig_event_metric()
 fig_ign_off()

@@ -133,6 +133,55 @@ if history:
 else:
     print("истории обучения нет — s_training.png не построен")
 
+# ------------------------------------------- 6. порог: precision и recall
+thr_results = env.get("thr_results") or []
+if thr_results:
+    thr = [t for t, _ in thr_results]
+    prec = [m["precision"] for _, m in thr_results]
+    rec = [m["recall"] for _, m in thr_results]
+    f1s = [m["f1"] for _, m in thr_results]
+    fig, ax = plt.subplots(figsize=(5.4, 2.6))
+    ax.plot(thr, rec, marker="o", ms=4, lw=1.6, color=GREY, label="recall")
+    ax.plot(thr, prec, marker="s", ms=4, lw=1.6, color=INK, label="precision")
+    ax.plot(thr, f1s, marker="^", ms=4, lw=2.0, color=ACCENT, label="F1")
+    ax.set_xlabel("порог прироста, литров")
+    ax.set_ylim(0, 1.05)
+    ax.legend(fontsize=9, ncol=3, loc="center right")
+    plt.tight_layout()
+    fig.savefig(os.path.join(OUT, "s_threshold.png"))
+    plt.close(fig)
+    print(f"порог: лучший F1 {max(f1s):.3f}")
+
+# ------------------------------------------- 7. где происходят заправки
+fig, ax = plt.subplots(figsize=(4.4, 2.6))
+bars = ax.barh(["на стоянке", "на ходу"], [711, 538], color=[GREY, ACCENT], height=0.5)
+for b, v in zip(bars, [711, 538]):
+    ax.text(v + 12, b.get_y() + b.get_height() / 2, str(v), va="center", fontsize=13)
+ax.set_xlim(0, 830)
+ax.set_xlabel("событий за полгода")
+ax.grid(axis="y", visible=False)
+plt.tight_layout()
+fig.savefig(os.path.join(OUT, "s_events_split.png"))
+plt.close(fig)
+
+# ------------------------------------------------------- 8. шкала цели
+fig, ax = plt.subplots(figsize=(5.4, 1.7))
+ax.set_xlim(0.3, 1.0)
+ax.set_ylim(-1, 1)
+ax.axis("off")
+ax.grid(False)
+ax.plot([0.3, 1.0], [0, 0], lw=2, color="#DDDDDD", solid_capstyle="butt")
+NL = chr(10)
+for x, label, color, up in ((0.373, "порог" + NL + "0.373", GREY, True),
+                            (0.853, "модель" + NL + "0.853", ACCENT, True),
+                            (0.88, "цель" + NL + "0.88", INK, False)):
+    ax.plot([x], [0], "o", ms=11, color=color)
+    ax.annotate(label, (x, 0), textcoords="offset points",
+                xytext=(0, 16 if up else -34), ha="center", fontsize=11, color=color)
+plt.tight_layout()
+fig.savefig(os.path.join(OUT, "s_goal.png"))
+plt.close(fig)
+
 print("картинки:", os.listdir(OUT))
 print(f"событийный F1: LSTM {lstm_f1:.3f}, порог {best_thr_f1:.3f}")
 print("confusion matrix:\n", cm)
