@@ -50,9 +50,9 @@ best_thr_f1 = env["best_thr_f1"]
 # ------------------------------------------------------------- 1. дисбаланс
 counts = df["label"].value_counts().sort_index()
 fig, ax = plt.subplots(figsize=(5.2, 2.9))
-bars = ax.bar(["0 — ничего", "1 — на ходу", "2 — на стоянке"], counts.values,
+bars = ax.bar(["0 — ничего", "1 — двигатель\nвключён", "2 — двигатель\nвыключен"], counts.values,
               color=[GREY, ACCENT, "#6E6E6E"])
-ax.set_ylabel("бинов по 5 минут")
+ax.set_ylabel("интервалов по 5 минут")
 ax.set_yscale("log")
 for b, v in zip(bars, counts.values):
     ax.text(b.get_x() + b.get_width() / 2, v * 1.15, f"{v:,}".replace(",", " "),
@@ -93,7 +93,7 @@ plt.tight_layout()
 fig.savefig(os.path.join(OUT, "s_compare.png"))
 plt.close(fig)
 
-# --------------------------------------------- 4. пример заправки на ходу
+# --------------------------------------------- 4. пример заправки с включённым двигателем
 top = df[df.label == 1].groupby("vehicle").size().sort_values(ascending=False).index[0]
 g = df[df.vehicle == top].reset_index(drop=True)
 ev = env["events_of"](g)
@@ -154,7 +154,7 @@ if thr_results:
 
 # ------------------------------------------- 7. где происходят заправки
 fig, ax = plt.subplots(figsize=(4.4, 2.6))
-bars = ax.barh(["на стоянке", "на ходу"], [711, 538], color=[GREY, ACCENT], height=0.5)
+bars = ax.barh(["двигатель\nвыключен", "двигатель\nвключён"], [711, 538], color=[GREY, ACCENT], height=0.5)
 for b, v in zip(bars, [711, 538]):
     ax.text(v + 12, b.get_y() + b.get_height() / 2, str(v), va="center", fontsize=13)
 ax.set_xlim(0, 830)

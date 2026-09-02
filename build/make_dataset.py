@@ -119,7 +119,7 @@ def apply_labels(df):
 
 
 def resample_ign_on(df):
-    """5-минутные бины. Класс 1 — заправка на ходу, класс 2 — событие с заглушенным двигателем."""
+    """5-минутные бины. Класс 1 — заправка с включённым двигателем, класс 2 — событие с заглушенным двигателем."""
     d = df.dropna(subset=['ts']).sort_values('ts').set_index('ts')
     rows = []
     for name, group in d.resample('5min'):

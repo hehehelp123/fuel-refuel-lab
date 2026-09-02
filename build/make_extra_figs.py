@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Дополнительные картинки для презентации: пример заправки на стоянке,
+"""Дополнительные картинки для презентации: пример заправки с выключенным двигателем,
 схема окна, схема событийной метрики. Кривая обучения строится в make_slide_figs.
 """
 import os
@@ -78,7 +78,7 @@ def fig_ign_off():
     fig, ax = plt.subplots(figsize=(6.0, 2.6))
     ax.plot(w.ts, np.where(valid, w.fuel_l, np.nan), lw=1.6, color=INK)
     ax.axvspan(g.ts[a], g.ts[b], color=PURPLE, alpha=0.16, lw=0,
-               label="двигатель заглушен, датчик молчит")
+               label="двигатель выключен, датчик молчит")
 
     lvl_before = np.median(g.fuel_l.values[max(0, a - 15):a])
     lvl_after = np.median(g.fuel_l.values[b + 1:b + 16])
