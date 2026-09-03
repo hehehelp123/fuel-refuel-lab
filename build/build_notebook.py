@@ -71,6 +71,11 @@ md("""## 1. Данные
 **Про разбиение.** `split` делит выборку **по машинам, а не по точкам**.
 Если резать случайно по точкам, окна одного и того же события попадут и в train, и в test,
 и метрика будет завышена. Не меняйте это разбиение.
+
+Из обучающих машин мы дополнительно откладываем девять под валидацию: на ней
+выбирается лучшая эпоха. Тест используется ровно один раз — для итогового замера.
+Выбирать эпоху по тесту нельзя: результат окажется завышенным, а на новых машинах
+модель сработает хуже, чем обещала метрика.
 """)
 
 code('''import os
@@ -221,11 +226,21 @@ code('''def make_windows(frame):
 
 
 t0 = time.time()
-X_train, y_train, meta_train = make_windows(df[df.split == "train"])
+# Из обучающих машин откладываем часть под валидацию: на ней выбираем эпоху.
+# Тест трогаем ровно один раз — в конце. Если выбирать эпоху по тесту,
+# результат будет завышен, и на новых машинах модель окажется хуже.
+train_veh = sorted(df[df.split == "train"].vehicle.unique())
+ev_per_veh = {v: count_events(df[df.vehicle == v].label) for v in train_veh}
+VAL_VEH = set(sorted(train_veh, key=lambda v: -ev_per_veh[v])[1::5][:9])
+
+X_train, y_train, meta_train = make_windows(
+    df[df.split.eq("train") & ~df.vehicle.isin(VAL_VEH)])
+X_val, y_val, meta_val = make_windows(df[df.vehicle.isin(VAL_VEH)])
 X_test, y_test, meta_test = make_windows(df[df.split == "test"])
 print(f"нарезка заняла {time.time() - t0:.1f} c")
-print("train:", X_train.shape, "| test:", X_test.shape)
+print("train:", X_train.shape, "| валидация:", X_val.shape, "| test:", X_test.shape)
 print("классы в train:", np.bincount(y_train))
+print("классы в val  :", np.bincount(y_val))
 print("классы в test :", np.bincount(y_test))''')
 
 # -------------------------------------------------------------------------
@@ -295,8 +310,10 @@ BATCH = 512
 LR = 1e-3
 
 train_ds = TensorDataset(torch.from_numpy(X_train), torch.from_numpy(y_train))
+val_ds = TensorDataset(torch.from_numpy(X_val), torch.from_numpy(y_val))
 test_ds = TensorDataset(torch.from_numpy(X_test), torch.from_numpy(y_test))
 train_loader = DataLoader(train_ds, batch_size=BATCH, shuffle=True)
+val_loader = DataLoader(val_ds, batch_size=BATCH, shuffle=False)
 test_loader = DataLoader(test_ds, batch_size=BATCH, shuffle=False)
 
 criterion = nn.CrossEntropyLoss(weight=weights.to(DEVICE))
@@ -332,8 +349,8 @@ for epoch in range(1, EPOCHS + 1):
         optimizer.step()
         total += loss.item()
 
-    y_pred = predict(test_loader)
-    f1_target = f1_score(y_test, y_pred, labels=[1], average="macro", zero_division=0)
+    val_pred = predict(val_loader)
+    f1_target = f1_score(y_val, val_pred, labels=[1], average="macro", zero_division=0)
     scheduler.step(f1_target)
     history.append((epoch, total / len(train_loader), f1_target))
 
@@ -345,10 +362,10 @@ for epoch in range(1, EPOCHS + 1):
         mark = ""
 
     print(f"эпоха {epoch:2d} | loss {total / len(train_loader):.4f} | "
-          f"F1 класса 1: {f1_target:.3f}{mark}")
+          f"F1 на валидации: {f1_target:.3f}{mark}")
 
 model.load_state_dict(best_state)
-print(f"\\nобучение заняло {time.time() - t0:.0f} c, лучший F1 класса 1: {best_f1:.3f}")''')
+print(f"\\nобучение заняло {time.time() - t0:.0f} c, лучший F1 на валидации: {best_f1:.3f}")''')
 
 # -------------------------------------------------------------------------
 md("""## 5. Метрики
@@ -415,7 +432,9 @@ def blocks(mask, times):
 
 
 def event_metrics(y_true, y_pred, meta, verbose=True):
-    tp = fp = fn = 0
+    n_true = n_true_hit = 0        # эталонные события и сколько из них найдено
+    n_pred = n_pred_hit = 0        # предсказанные события и сколько попало в цель
+
     for v, sub in meta.groupby("vehicle"):
         pos = sub.index.to_numpy()          # meta идёт в том же порядке, что y_true/y_pred
         times = sub["ts"].values
@@ -423,22 +442,27 @@ def event_metrics(y_true, y_pred, meta, verbose=True):
         t_pred = blocks(y_pred[pos] == 1, times)
         t_amb = blocks(y_true[pos] == 2, times)
 
-        matched = set()
+        hit_true = set()
         for ps, pe in t_pred:
             hit = [k for k, (ts_, te_) in enumerate(t_true)
                    if ps <= te_ + TOLERANCE and pe >= ts_ - TOLERANCE]
             if hit:
-                tp += 1
-                matched.update(hit)
+                hit_true.update(hit)
+                n_pred += 1
+                n_pred_hit += 1
             elif any(ps <= te_ + TOLERANCE and pe >= ts_ - TOLERANCE
                      for ts_, te_ in t_amb):
                 pass                      # попали в неоднозначную зону — не штрафуем
             else:
-                fp += 1
-        fn += len(t_true) - len(matched)
+                n_pred += 1               # ложное срабатывание
+        n_true += len(t_true)
+        n_true_hit += len(hit_true)
 
-    precision = tp / (tp + fp) if tp + fp else 0.0
-    recall = tp / (tp + fn) if tp + fn else 0.0
+    # событие засчитывается один раз, сколько бы кусков модель на него ни выдала
+    tp, fn = n_true_hit, n_true - n_true_hit
+    fp = n_pred - n_pred_hit
+    precision = n_pred_hit / n_pred if n_pred else 0.0
+    recall = n_true_hit / n_true if n_true else 0.0
     f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
     if verbose:
         print(f"события: TP={tp}  FP={fp}  FN={fn}")
@@ -502,7 +526,7 @@ baseline = report(y_test, y_pred, meta_test, "LSTM baseline")''')
 # -------------------------------------------------------------------------
 md("""## 8. Задание
 
-**Цель: увеличить событийный F1 на тестовых машинах.**
+**Цель: увеличить событийный F1 на тестовых машинах.** Бейзлайн — 0.786, планка «хорошо» — выше 0.90.
 
 Главная метрика — `event_f1` из отчёта выше. Вторая метрика — точечный F1 по классу 1;
 её тоже указывайте, чтобы было видно, за счёт чего вырос результат.

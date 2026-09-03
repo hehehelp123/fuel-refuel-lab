@@ -173,8 +173,8 @@ ax.grid(False)
 ax.plot([0.3, 1.0], [0, 0], lw=2, color="#DDDDDD", solid_capstyle="butt")
 NL = chr(10)
 for x, label, color, up in ((0.373, "порог" + NL + "0.373", GREY, True),
-                            (0.853, "модель" + NL + "0.853", ACCENT, True),
-                            (0.88, "цель" + NL + "0.88", INK, False)):
+                            (0.786, "бейзлайн" + NL + "0.786", ACCENT, True),
+                            (0.90, "планка" + NL + "0.90", INK, False)):
     ax.plot([x], [0], "o", ms=11, color=color)
     ax.annotate(label, (x, 0), textcoords="offset points",
                 xytext=(0, 16 if up else -34), ha="center", fontsize=11, color=color)
