@@ -198,7 +198,10 @@ LSTM / GRU / 1D-CNN, постобработка предсказаний, пор
 python build/make_dataset.py        # датасет из instance/app.db проекта FuelRemove
 python build/build_notebook.py      # .ipynb из списка ячеек
 python build/run_notebook_check.py  # прогон всех ячеек как скрипта
-python build/make_slide_figs.py     # графики для презентации
+python build/make_slide_figs.py     # основные графики (прогоняет ноутбук)
+python build/make_extra_figs.py     # заправка с выключенным двигателем, схема окна
+python build/fig_event_metric.py    # схема событийной метрики
+python build/analyze_off_task.py    # график для вопроса со звёздочкой (читает базу FuelRemove)
 python build/build_slides_itmo.py   # .pptx на шаблоне ИТМО
 python build/qa_slides.py           # проверка вёрстки слайдов
 python build/publish.py owner/repo  # ссылки на данные и пуш в GitHub
